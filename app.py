@@ -1,12 +1,9 @@
 from flask import Flask, render_template_string, request, send_file
 import os
-import base64
 
 app = Flask(__name__)
 
-# Тут храним скриншот
 latest_screenshot = 'screen.jpg'
-# Очередь команд для клиента
 commands = []
 
 HTML_ADMIN = """
@@ -16,7 +13,6 @@ HTML_ADMIN = """
 <body style="background:#111; color:white; text-align:center; font-family:Arial;">
     <h1>Панель управления</h1>
     <div style="position:relative; display:inline-block;">
-        <!-- Картинка, по которой мы будем кликать -->
         <img id="screen" src="/get_screen" style="width:80%; border:2px solid red; cursor:crosshair;" onclick="sendClick(event)">
     </div>
     <br><br>
@@ -28,15 +24,13 @@ HTML_ADMIN = """
         function refreshImg() {
             document.getElementById('screen').src = "/get_screen?t=" + new Date().getTime();
         }
-        setInterval(refreshImg, 2000); // Обновляем экран каждые 2 сек
+        setInterval(refreshImg, 2000);
 
         function sendClick(e) {
             var img = document.getElementById('screen');
             var rect = img.getBoundingClientRect();
-            // Вычисляем координаты клика в процентах от размера окна
             var x = (e.clientX - rect.left) / rect.width;
             var y = (e.clientY - rect.top) / rect.height;
-            
             fetch('/click', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
