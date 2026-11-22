@@ -16,12 +16,11 @@ HTML_ADMIN = """
         <div style="width:70%;">
             <img id="screen" src="/get_screen" style="width:100%; border:2px solid red; cursor:crosshair;" onclick="sendClick(event)">
         </div>
-        <div style="width:25%; background:#222; padding:10px; border-radius:5px;">
-            <h3>Действия</h3>
-            <button onclick="sendCmd('shutdown /s /t 0')" style="width:100%; padding:10px; margin-bottom:5px; background:red; color:white; border:none; cursor:pointer;">Выключить</button>
-            <button onclick="sendCmd('shutdown /r /t 0')" style="width:100%; padding:10px; margin-bottom:5px; background:orange; color:white; border:none; cursor:pointer;">Перезагрузить</button>
+        <div style="width:25%; background:#222; padding:10px; border-radius:5px; text-align:left;">
+            <h3 style="text-align:center;">Действия</h3>
             <button onclick="sendCmd('calc')" style="width:100%; padding:10px; margin-bottom:5px; background:green; color:white; border:none; cursor:pointer;">Калькулятор</button>
-            <button onclick="sendCmd('taskkill /f /im explorer.exe')" style="width:100%; padding:10px; background:gray; color:white; border:none; cursor:pointer;">Скрыть всё</button>
+            <button onclick="sendCmd('notepad')" style="width:100%; padding:10px; margin-bottom:5px; background:blue; color:white; border:none; cursor:pointer;">Блокнот</button>
+            <button onclick="sendCmd('start https://google.com')" style="width:100%; padding:10px; margin-bottom:5px; background:purple; color:white; border:none; cursor:pointer;">Открыть сайт</button>
         </div>
     </div>
     
@@ -31,14 +30,14 @@ HTML_ADMIN = """
     </div>
     <div>
         <input type="text" id="text" placeholder="Введи текст для печати..." style="padding:10px; width:300px;">
-        <button onclick="sendText()" style="padding:10px; background:blue; color:white; border:none; cursor:pointer;">Напечатать</button>
+        <button onclick="sendText()" style="padding:10px; background:#007bff; color:white; border:none; cursor:pointer;">Напечатать</button>
     </div>
     
     <script>
         function refreshImg() {
             document.getElementById('screen').src = "/get_screen?t=" + new Date().getTime();
         }
-        setInterval(refreshImg, 1500);
+        setInterval(refreshImg, 1500); // Обновление экрана каждые 1.5 секунды
 
         function sendClick(e) {
             var img = document.getElementById('screen');
