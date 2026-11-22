@@ -37,7 +37,7 @@ HTML_ADMIN = """
         function refreshImg() {
             document.getElementById('screen').src = "/get_screen?t=" + new Date().getTime();
         }
-        setInterval(refreshImg, 1500); // Обновление экрана каждые 1.5 секунды
+        setInterval(refreshImg, 1500);
 
         function sendClick(e) {
             var img = document.getElementById('screen');
